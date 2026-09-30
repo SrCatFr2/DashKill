@@ -194,3 +194,5 @@ export function updateBullets(
         }
     }
 }
+
+window.gameBullets = bullets;
