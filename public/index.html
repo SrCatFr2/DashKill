@@ -2,72 +2,98 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
+
     <meta
         name="viewport"
-        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+        content="width=device-width,
+        initial-scale=1,
+        maximum-scale=1,
+        user-scalable=no,
+        viewport-fit=cover"
     >
+
     <title>DashKill</title>
+
     <link rel="stylesheet" href="/style.css">
 </head>
+
 <body>
 
-    <main id="gameShell">
+<div id="game">
 
-        <canvas id="game"></canvas>
+    <canvas id="canvas"></canvas>
 
-        <div id="hud">
-            <div class="hud-left">
-                <div class="logo">DASHKILL</div>
+    <div id="hud">
 
-                <div class="status">
-                    <div class="status-item">
-                        <span class="label">DASH</span>
-                        <span id="dashStatus" class="value ready">READY</span>
-                    </div>
-
-                    <div class="status-item">
-                        <span class="label">SHOTS</span>
-                        <span id="shotStatus" class="value">2 / 2</span>
-                    </div>
-                </div>
-            </div>
+        <div id="brand">
+            DASHKILL
         </div>
 
-        <div id="crosshair"></div>
+        <div id="stats">
 
-        <!-- CONTROLES MÓVILES -->
-        <div id="mobileControls">
-
-            <div
-                id="moveJoystick"
-                class="joystick-zone left-zone"
-            >
-                <div class="joystick">
-                    <div class="joystick-knob"></div>
-                </div>
+            <div class="stat">
+                <span>DASH</span>
+                <strong id="dashValue">READY</strong>
             </div>
 
-            <div
-                id="aimJoystick"
-                class="joystick-zone right-zone"
-            >
-                <div class="joystick">
-                    <div class="joystick-knob"></div>
-                </div>
+            <div class="stat">
+                <span>SHOTS</span>
+                <strong id="shotsValue">2 / 2</strong>
             </div>
-
-            <button id="fireButton" class="mobile-button fire-button">
-                FIRE
-            </button>
-
-            <button id="dashButton" class="mobile-button dash-button">
-                DASH
-            </button>
 
         </div>
 
-    </main>
+    </div>
 
-    <script src="/game.js"></script>
+    <div id="crosshair"></div>
+
+    <div id="mobileControls">
+
+        <div
+            id="movePad"
+            class="joystickPad"
+        >
+            <div class="joystickBase">
+                <div class="joystickKnob"></div>
+            </div>
+        </div>
+
+        <div
+            id="aimPad"
+            class="joystickPad"
+        >
+            <div class="joystickBase">
+                <div class="joystickKnob"></div>
+            </div>
+        </div>
+
+        <button
+            id="fireButton"
+            class="actionButton fire"
+        >
+            FIRE
+        </button>
+
+        <button
+            id="dashButton"
+            class="actionButton dash"
+        >
+            DASH
+        </button>
+
+    </div>
+
+    <div id="portraitWarning">
+        <div>
+            <b>DASHKILL</b>
+            <span>GIRA TU DISPOSITIVO</span>
+            <small>El juego requiere orientación horizontal.</small>
+        </div>
+    </div>
+
+</div>
+
+<script type="module" src="/js/main.js"></script>
+
 </body>
 </html>
