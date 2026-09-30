@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <title>DashKill</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div id="game">
+
+    <canvas id="canvas"></canvas>
+
+    <div id="hud">
+
+        <div class="hud-left">
+            <div class="label">DASH</div>
+
+            <div class="dash-box">
+                <div id="dashFill"></div>
+            </div>
+
+            <div id="dashText">READY</div>
+        </div>
+
+        <div class="title">
+            DASH<span>KILL</span>
+        </div>
+
+        <div class="hud-right">
+            <div class="label">SHOTS</div>
+
+            <div class="shots" id="shots">
+                <i></i>
+                <i></i>
+            </div>
+
+            <div id="shotTimer">READY</div>
+        </div>
+
+    </div>
+
+    <div id="crosshair"></div>
+
+    <div id="message"></div>
+
+    <div id="controls">
+        <span>WASD</span> MOVE
+        <span>SHIFT</span> DASH
+        <span>MOUSE</span> AIM
+        <span>CLICK</span> FIRE
+    </div>
+
+</div>
+
+<script src="game.js"></script>
+
+</body>
+</html>
