@@ -1,3 +1,7 @@
+// ============================================================
+// DASHKILL — MOBILE INPUT
+// ============================================================
+
 export const mobile = {
 
     enabled:
@@ -22,280 +26,269 @@ export const mobile = {
     dashPressed: false
 };
 
-const movePad =
-    document.getElementById("movePad");
 
-const aimPad =
-    document.getElementById("aimPad");
+// ============================================================
+// SETUP
+// ============================================================
 
-const moveKnob =
-    movePad.querySelector(".joystickKnob");
+export function setupMobile() {
 
-const aimKnob =
-    aimPad.querySelector(".joystickKnob");
+    const movePad =
+        document.getElementById("movePad");
 
-const fireButton =
-    document.getElementById("fireButton");
+    const aimPad =
+        document.getElementById("aimPad");
 
-const dashButton =
-    document.getElementById("dashButton");
+    const fireButton =
+        document.getElementById("fireButton");
 
-const MAX_DISTANCE = 48;
+    const dashButton =
+        document.getElementById("dashButton");
 
-function updateKnob(
-    knob,
-    x,
-    y
-) {
-    knob.style.transform =
-        `translate(
-            calc(-50% + ${x}px),
-            calc(-50% + ${y}px)
-        )`;
-}
 
-function joystickValue(
-    event,
-    pad
-) {
-
-    const rect =
-        pad.getBoundingClientRect();
-
-    const centerX =
-        rect.left + rect.width / 2;
-
-    const centerY =
-        rect.top + rect.height / 2;
-
-    let dx =
-        event.clientX - centerX;
-
-    let dy =
-        event.clientY - centerY;
-
-    const length =
-        Math.hypot(dx, dy);
-
-    if (length > MAX_DISTANCE) {
-
-        dx =
-            dx / length *
-            MAX_DISTANCE;
-
-        dy =
-            dy / length *
-            MAX_DISTANCE;
-    }
-
-    return {
-        x: dx / MAX_DISTANCE,
-        y: dy / MAX_DISTANCE,
-
-        dx,
-        dy
-    };
-}
-
-/* =========================================================
-   MOVEMENT JOYSTICK
-========================================================= */
-
-movePad.addEventListener(
-    "pointerdown",
-    event => {
-
-        event.preventDefault();
-
-        mobile.move.active = true;
-        mobile.move.id = event.pointerId;
-
-        movePad.setPointerCapture(
-            event.pointerId
+    if (!movePad || !aimPad) {
+        console.warn(
+            "DashKill: controles móviles no encontrados."
         );
 
-        updateMove(event);
+        return;
     }
-);
 
-movePad.addEventListener(
-    "pointermove",
-    event => {
 
-        if (
-            !mobile.move.active ||
-            mobile.move.id !== event.pointerId
+    // ========================================================
+    // JOYSTICK
+    // ========================================================
+
+    function setupJoystick(
+        element,
+        state
+    ) {
+
+        const knob =
+            element.querySelector(".joystickKnob");
+
+        function updateJoystick(
+            event
         ) {
-            return;
+
+            const rect =
+                element.getBoundingClientRect();
+
+            const centerX =
+                rect.left + rect.width / 2;
+
+            const centerY =
+                rect.top + rect.height / 2;
+
+            let dx =
+                event.clientX - centerX;
+
+            let dy =
+                event.clientY - centerY;
+
+            const max =
+                48;
+
+            const distance =
+                Math.hypot(dx, dy);
+
+            if (distance > max) {
+
+                dx =
+                    dx / distance * max;
+
+                dy =
+                    dy / distance * max;
+            }
+
+            state.x =
+                dx / max;
+
+            state.y =
+                dy / max;
+
+
+            if (knob) {
+
+                knob.style.transform =
+                    `translate(
+                        calc(-50% + ${dx}px),
+                        calc(-50% + ${dy}px)
+                    )`;
+            }
         }
 
-        updateMove(event);
-    }
-);
 
-movePad.addEventListener(
-    "pointerup",
-    resetMove
-);
+        function reset() {
 
-movePad.addEventListener(
-    "pointercancel",
-    resetMove
-);
+            state.active = false;
+            state.x = 0;
+            state.y = 0;
+            state.id = null;
 
-function updateMove(event) {
+            if (knob) {
 
-    const value =
-        joystickValue(
-            event,
-            movePad
-        );
-
-    mobile.move.x = value.x;
-    mobile.move.y = value.y;
-
-    updateKnob(
-        moveKnob,
-        value.dx,
-        value.dy
-    );
-}
-
-function resetMove() {
-
-    mobile.move.active = false;
-    mobile.move.id = null;
-
-    mobile.move.x = 0;
-    mobile.move.y = 0;
-
-    updateKnob(
-        moveKnob,
-        0,
-        0
-    );
-}
-
-/* =========================================================
-   AIM JOYSTICK
-========================================================= */
-
-aimPad.addEventListener(
-    "pointerdown",
-    event => {
-
-        event.preventDefault();
-
-        mobile.aim.active = true;
-        mobile.aim.id = event.pointerId;
-
-        aimPad.setPointerCapture(
-            event.pointerId
-        );
-
-        updateAim(event);
-    }
-);
-
-aimPad.addEventListener(
-    "pointermove",
-    event => {
-
-        if (
-            !mobile.aim.active ||
-            mobile.aim.id !== event.pointerId
-        ) {
-            return;
+                knob.style.transform =
+                    "translate(-50%, -50%)";
+            }
         }
 
-        updateAim(event);
-    }
-);
 
-aimPad.addEventListener(
-    "pointerup",
-    resetAim
-);
+        element.addEventListener(
+            "pointerdown",
+            event => {
 
-aimPad.addEventListener(
-    "pointercancel",
-    resetAim
-);
+                event.preventDefault();
 
-function updateAim(event) {
+                state.active = true;
+                state.id =
+                    event.pointerId;
 
-    const value =
-        joystickValue(
-            event,
-            aimPad
+                element.setPointerCapture(
+                    event.pointerId
+                );
+
+                updateJoystick(event);
+            }
         );
 
-    mobile.aim.x = value.x;
-    mobile.aim.y = value.y;
 
-    updateKnob(
-        aimKnob,
-        value.dx,
-        value.dy
+        element.addEventListener(
+            "pointermove",
+            event => {
+
+                if (
+                    !state.active ||
+                    event.pointerId !== state.id
+                ) {
+                    return;
+                }
+
+                event.preventDefault();
+
+                updateJoystick(event);
+            }
+        );
+
+
+        element.addEventListener(
+            "pointerup",
+            event => {
+
+                if (
+                    event.pointerId === state.id
+                ) {
+                    reset();
+                }
+            }
+        );
+
+
+        element.addEventListener(
+            "pointercancel",
+            reset
+        );
+
+        element.addEventListener(
+            "lostpointercapture",
+            reset
+        );
+    }
+
+
+    // ========================================================
+    // MOVIMIENTO
+    // ========================================================
+
+    setupJoystick(
+        movePad,
+        mobile.move
     );
+
+
+    // ========================================================
+    // AIM
+    // ========================================================
+
+    setupJoystick(
+        aimPad,
+        mobile.aim
+    );
+
+
+    // ========================================================
+    // FIRE
+    // ========================================================
+
+    if (fireButton) {
+
+        fireButton.addEventListener(
+            "pointerdown",
+            event => {
+
+                event.preventDefault();
+
+                mobile.firing = true;
+
+                fireButton.setPointerCapture(
+                    event.pointerId
+                );
+            }
+        );
+
+
+        fireButton.addEventListener(
+            "pointerup",
+            event => {
+
+                event.preventDefault();
+
+                mobile.firing = false;
+            }
+        );
+
+
+        fireButton.addEventListener(
+            "pointercancel",
+            () => {
+
+                mobile.firing = false;
+            }
+        );
+
+
+        fireButton.addEventListener(
+            "lostpointercapture",
+            () => {
+
+                mobile.firing = false;
+            }
+        );
+    }
+
+
+    // ========================================================
+    // DASH
+    // ========================================================
+
+    if (dashButton) {
+
+        dashButton.addEventListener(
+            "pointerdown",
+            event => {
+
+                event.preventDefault();
+
+                mobile.dashPressed = true;
+            }
+        );
+    }
 }
 
-function resetAim() {
 
-    mobile.aim.active = false;
-    mobile.aim.id = null;
-
-    mobile.aim.x = 0;
-    mobile.aim.y = 0;
-
-    updateKnob(
-        aimKnob,
-        0,
-        0
-    );
-}
-
-/* =========================================================
-   FIRE
-========================================================= */
-
-fireButton.addEventListener(
-    "pointerdown",
-    event => {
-
-        event.preventDefault();
-
-        mobile.firing = true;
-    }
-);
-
-fireButton.addEventListener(
-    "pointerup",
-    () => {
-        mobile.firing = false;
-    }
-);
-
-fireButton.addEventListener(
-    "pointercancel",
-    () => {
-        mobile.firing = false;
-    }
-);
-
-/* =========================================================
-   DASH
-========================================================= */
-
-dashButton.addEventListener(
-    "pointerdown",
-    event => {
-
-        event.preventDefault();
-
-        mobile.dashPressed = true;
-    }
-);
+// ============================================================
+// CONSUMIR DASH
+// ============================================================
 
 export function consumeDashPress() {
 
