@@ -5,14 +5,36 @@ const app = express();
 
 const PORT = process.env.PORT || 3000;
 
-app.use(express.static(path.join(__dirname, "public")));
+const publicPath = path.join(__dirname, "public");
 
-app.get("*splat", (req, res) => {
+app.use(
+    express.static(publicPath, {
+        extensions: ["html"]
+    })
+);
+
+/*
+    Página principal
+*/
+
+app.get("/", (req, res) => {
     res.sendFile(
-        path.join(__dirname, "public", "index.html")
+        path.join(publicPath, "index.html")
     );
 });
 
+/*
+    En desarrollo, si pedimos un archivo
+    que no existe, devolvemos 404 en lugar
+    de enviar index.html como si fuera JS.
+*/
+
+app.use((req, res) => {
+    res.status(404).send("Not found");
+});
+
 app.listen(PORT, () => {
-    console.log(`DashKill running on port ${PORT}`);
+    console.log(
+        `DashKill running at http://localhost:${PORT}`
+    );
 });
