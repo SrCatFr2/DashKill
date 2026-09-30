@@ -1,10 +1,12 @@
+/* ============================================================
+   DASHKILL
+   MOBILE + DESKTOP
+   ============================================================ */
+
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-
-    user-select: none;
-    -webkit-user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -12,128 +14,132 @@ html,
 body {
     width: 100%;
     height: 100%;
-
     overflow: hidden;
-
     background: #050606;
-
-    touch-action: none;
 }
 
 body {
-    position: fixed;
-    inset: 0;
-
-    font-family:
-        Inter,
-        Arial,
-        Helvetica,
-        sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
+    user-select: none;
+    touch-action: none;
 }
 
 #game {
     position: fixed;
     inset: 0;
-
     width: 100%;
     height: 100%;
-
     overflow: hidden;
+    background: #050606;
 }
 
 #canvas {
     position: absolute;
     inset: 0;
-
+    display: block;
     width: 100%;
     height: 100%;
-
-    display: block;
-
-    cursor: none;
+    touch-action: none;
 }
 
-/* =========================================================
+
+/* ============================================================
    HUD
-========================================================= */
+   ============================================================ */
 
 #hud {
     position: fixed;
-    inset: 0;
-
-    pointer-events: none;
+    top: 20px;
+    left: 22px;
 
     z-index: 20;
+
+    display: flex;
+    align-items: flex-start;
+    gap: 22px;
+
+    pointer-events: none;
 }
 
 #brand {
-    position: absolute;
+    color: #72f28b;
 
-    top: 22px;
-    left: 24px;
-
-    color: rgba(255,255,255,.94);
-
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 900;
+    letter-spacing: 4px;
 
-    letter-spacing: .24em;
+    text-shadow:
+        0 0 18px rgba(114, 242, 139, .25);
 }
 
 #stats {
-    position: absolute;
-
-    top: 51px;
-    left: 24px;
-
     display: flex;
-    gap: 18px;
+    gap: 10px;
 }
 
 .stat {
-    display: flex;
-    align-items: center;
+    min-width: 82px;
 
-    gap: 7px;
+    padding: 8px 11px;
+
+    border:
+        1px solid rgba(255,255,255,.08);
+
+    border-radius: 9px;
+
+    background:
+        rgba(10,13,12,.72);
+
+    backdrop-filter:
+        blur(12px);
+
+    -webkit-backdrop-filter:
+        blur(12px);
 }
 
 .stat span {
-    color: rgba(255,255,255,.32);
+    display: block;
+
+    color:
+        rgba(255,255,255,.4);
 
     font-size: 8px;
     font-weight: 800;
-
-    letter-spacing: .13em;
+    letter-spacing: 1.5px;
 }
 
 .stat strong {
-    color: rgba(255,255,255,.8);
+    display: block;
 
-    font-size: 9px;
-    font-weight: 900;
+    margin-top: 3px;
 
-    letter-spacing: .08em;
+    color: #fff;
+
+    font-size: 11px;
+    letter-spacing: 1px;
 }
 
-.stat strong.ready {
+#dashValue.ready {
     color: #72f28b;
 }
 
-/* =========================================================
+
+/* ============================================================
    CROSSHAIR
-========================================================= */
+   ============================================================ */
 
 #crosshair {
     position: fixed;
 
-    width: 17px;
-    height: 17px;
+    z-index: 30;
 
-    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+
+    transform:
+        translate(-50%, -50%);
 
     pointer-events: none;
-
-    z-index: 30;
 }
 
 #crosshair::before,
@@ -142,39 +148,48 @@ body {
 
     position: absolute;
 
-    background: rgba(255,255,255,.8);
+    background: #72f28b;
+
+    box-shadow:
+        0 0 8px rgba(114,242,139,.55);
 }
 
 #crosshair::before {
-    width: 2px;
-    height: 17px;
-
     left: 7px;
     top: 0;
+
+    width: 2px;
+    height: 16px;
 }
 
 #crosshair::after {
-    width: 17px;
-    height: 2px;
-
     left: 0;
     top: 7px;
+
+    width: 16px;
+    height: 2px;
 }
 
-/* =========================================================
-   MOBILE
-========================================================= */
+
+/* ============================================================
+   MOBILE CONTROLS
+   ============================================================ */
 
 #mobileControls {
-    display: none;
-
     position: fixed;
     inset: 0;
 
     z-index: 50;
 
+    display: none;
+
     pointer-events: none;
 }
+
+
+/* ============================================================
+   JOYSTICKS
+   ============================================================ */
 
 .joystickPad {
     position: absolute;
@@ -182,132 +197,171 @@ body {
     width: 150px;
     height: 150px;
 
-    bottom: 25px;
-
-    border-radius: 50%;
-
     pointer-events: auto;
 
     touch-action: none;
 }
 
 #movePad {
-    left: 22px;
+    left: 30px;
+    bottom: 28px;
 }
 
 #aimPad {
-    right: 22px;
+    right: 30px;
+    bottom: 28px;
 }
 
 .joystickBase {
     position: absolute;
 
-    width: 108px;
-    height: 108px;
-
     left: 50%;
     top: 50%;
 
-    transform: translate(-50%, -50%);
+    width: 120px;
+    height: 120px;
+
+    transform:
+        translate(-50%, -50%);
 
     border-radius: 50%;
 
     background:
-        rgba(255,255,255,.035);
+        radial-gradient(
+            circle,
+            rgba(114,242,139,.11),
+            rgba(10,15,13,.72)
+        );
 
     border:
-        1px solid rgba(255,255,255,.12);
+        2px solid rgba(114,242,139,.28);
 
     box-shadow:
-        inset 0 0 30px rgba(255,255,255,.025),
-        0 10px 30px rgba(0,0,0,.3);
+        inset 0 0 30px rgba(0,0,0,.45),
+        0 0 25px rgba(114,242,139,.06);
 
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter:
+        blur(8px);
+
+    -webkit-backdrop-filter:
+        blur(8px);
+}
+
+.joystickBase::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 14px;
+
+    border-radius: 50%;
+
+    border:
+        1px solid rgba(255,255,255,.06);
 }
 
 .joystickKnob {
     position: absolute;
 
-    width: 52px;
-    height: 52px;
-
     left: 50%;
     top: 50%;
 
-    transform: translate(-50%, -50%);
+    width: 52px;
+    height: 52px;
+
+    transform:
+        translate(-50%, -50%);
 
     border-radius: 50%;
 
     background:
-        rgba(255,255,255,.09);
+        radial-gradient(
+            circle at 35% 30%,
+            rgba(255,255,255,.15),
+            rgba(114,242,139,.18) 45%,
+            rgba(20,30,25,.95) 100%
+        );
 
     border:
-        1px solid rgba(255,255,255,.18);
+        2px solid rgba(114,242,139,.55);
+
+    box-shadow:
+        0 5px 20px rgba(0,0,0,.5),
+        0 0 18px rgba(114,242,139,.12);
 }
 
-#movePad .joystickKnob {
-    border-color:
-        rgba(114,242,139,.4);
-}
+
+/* ============================================================
+   ACTION BUTTONS
+   ============================================================ */
 
 .actionButton {
     position: absolute;
 
-    border: 1px solid rgba(255,255,255,.14);
+    width: 76px;
+    height: 76px;
 
     border-radius: 50%;
+
+    border:
+        1px solid rgba(255,255,255,.1);
+
+    color: white;
+
+    font-size: 10px;
+    font-weight: 900;
+
+    letter-spacing: 1.5px;
 
     pointer-events: auto;
 
     touch-action: none;
 
-    color: white;
-
     background:
-        rgba(15,17,16,.72);
-
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-
-    font-size: 8px;
-    font-weight: 900;
-
-    letter-spacing: .1em;
+        rgba(12,16,14,.82);
 
     box-shadow:
-        0 10px 30px rgba(0,0,0,.35),
+        0 8px 25px rgba(0,0,0,.4),
         inset 0 0 20px rgba(255,255,255,.025);
+
+    backdrop-filter:
+        blur(12px);
+
+    -webkit-backdrop-filter:
+        blur(12px);
+
+    transition:
+        transform .08s ease,
+        background .08s ease;
 }
 
 .actionButton:active {
-    transform: scale(.9);
+    transform: scale(.91);
 }
 
-.fire {
-    width: 70px;
-    height: 70px;
-
-    right: 177px;
-    bottom: 39px;
-}
-
-.dash {
-    width: 62px;
-    height: 62px;
-
-    right: 105px;
-    bottom: 126px;
-
-    color: #72f28b;
+.actionButton.fire {
+    right: 175px;
+    bottom: 42px;
 
     border-color:
-        rgba(114,242,139,.28);
+        rgba(114,242,139,.4);
+
+    color:
+        #72f28b;
 }
 
-/* =========================================================
+.actionButton.dash {
+    right: 88px;
+    bottom: 105px;
+
+    border-color:
+        rgba(255,255,255,.16);
+}
+
+
+/* ============================================================
    PORTRAIT
-========================================================= */
+   ============================================================ */
 
 #portraitWarning {
     display: none;
@@ -315,50 +369,63 @@ body {
     position: fixed;
     inset: 0;
 
-    z-index: 999;
+    z-index: 100;
 
     align-items: center;
     justify-content: center;
 
-    text-align: center;
-
-    background: #050606;
-
-    color: white;
+    background:
+        #050606;
 }
 
-#portraitWarning div {
+.portraitBox {
     display: flex;
     flex-direction: column;
+    align-items: center;
 
-    gap: 12px;
+    text-align: center;
+
+    padding: 30px;
 }
 
-#portraitWarning b {
-    font-size: 20px;
-    letter-spacing: .25em;
-}
-
-#portraitWarning span {
+.portraitBox b {
     color: #72f28b;
 
+    font-size: 25px;
+    letter-spacing: 5px;
+}
+
+.portraitBox span {
+    margin-top: 18px;
+
+    color: white;
+
+    font-size: 13px;
+    font-weight: 800;
+
+    letter-spacing: 2px;
+}
+
+.portraitBox small {
+    margin-top: 8px;
+
+    max-width: 240px;
+
+    color:
+        rgba(255,255,255,.4);
+
     font-size: 11px;
-    font-weight: 900;
 
-    letter-spacing: .18em;
+    line-height: 1.5;
 }
 
-#portraitWarning small {
-    color: rgba(255,255,255,.35);
 
-    font-size: 10px;
-}
-
-/* =========================================================
-   TOUCH DEVICE
-========================================================= */
+/* ============================================================
+   TOUCH DEVICES
+   ============================================================ */
 
 @media (pointer: coarse) {
+
     #mobileControls {
         display: block;
     }
@@ -366,81 +433,129 @@ body {
     #crosshair {
         display: none;
     }
-}
 
-/* =========================================================
-   SMALL MOBILE
-========================================================= */
-
-@media (pointer: coarse) and (max-width: 700px) {
+    #hud {
+        top: 10px;
+        left: 12px;
+    }
 
     #brand {
-        top: max(12px, env(safe-area-inset-top));
-        left: 16px;
-
         font-size: 14px;
     }
 
-    #stats {
-        top: 38px;
-        left: 16px;
+    .stat {
+        min-width: 65px;
+        padding: 6px 8px;
     }
 
-    .joystickPad {
-        width: 135px;
-        height: 135px;
-
-        bottom: max(
-            15px,
-            env(safe-area-inset-bottom)
-        );
-    }
-
-    .joystickBase {
-        width: 98px;
-        height: 98px;
-    }
-
-    .joystickKnob {
-        width: 48px;
-        height: 48px;
-    }
-
-    #movePad {
-        left: 8px;
-    }
-
-    #aimPad {
-        right: 8px;
-    }
-
-    .fire {
-        width: 63px;
-        height: 63px;
-
-        right: 144px;
-        bottom: 27px;
-    }
-
-    .dash {
-        width: 56px;
-        height: 56px;
-
-        right: 77px;
-        bottom: 103px;
-    }
 }
 
-/* =========================================================
-   PORTRAIT DETECTION
-========================================================= */
 
-@media (orientation: portrait) and (max-width: 900px) {
-    #portraitWarning {
-        display: flex;
-    }
+/* ============================================================
+   PORTRAIT MOBILE
+   ============================================================ */
+
+@media
+(pointer: coarse)
+and (orientation: portrait) {
 
     #mobileControls {
         display: none;
     }
+
+    #portraitWarning {
+        display: flex;
+    }
+
+}
+
+
+/* ============================================================
+   SMALL LANDSCAPE PHONES
+   ============================================================ */
+
+@media
+(pointer: coarse)
+and (max-height: 500px) {
+
+    #movePad,
+    #aimPad {
+        bottom: 10px;
+    }
+
+    .joystickPad {
+        width: 125px;
+        height: 125px;
+    }
+
+    .joystickBase {
+        width: 100px;
+        height: 100px;
+    }
+
+    .joystickKnob {
+        width: 45px;
+        height: 45px;
+    }
+
+    #movePad {
+        left: 18px;
+    }
+
+    #aimPad {
+        right: 18px;
+    }
+
+    .actionButton {
+        width: 62px;
+        height: 62px;
+    }
+
+    .actionButton.fire {
+        right: 142px;
+        bottom: 22px;
+    }
+
+    .actionButton.dash {
+        right: 72px;
+        bottom: 74px;
+    }
+
+}
+
+
+/* ============================================================
+   VERY SMALL LANDSCAPE
+   ============================================================ */
+
+@media
+(pointer: coarse)
+and (max-height: 380px) {
+
+    #movePad,
+    #aimPad {
+        transform: scale(.82);
+        transform-origin: bottom;
+    }
+
+    #movePad {
+        left: 5px;
+        bottom: 0;
+    }
+
+    #aimPad {
+        right: 5px;
+        bottom: 0;
+    }
+
+    .actionButton.fire {
+        right: 112px;
+        bottom: 12px;
+    }
+
+    .actionButton.dash {
+        right: 55px;
+        bottom: 55px;
+    }
+
 }
