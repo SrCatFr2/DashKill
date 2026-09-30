@@ -1,237 +1,364 @@
 * {
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
+    margin: 0;
+    padding: 0;
+
     user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 html,
 body {
     width: 100%;
     height: 100%;
-    margin: 0;
-    padding: 0;
+
     overflow: hidden;
+
     background: #050606;
-    font-family: Arial, Helvetica, sans-serif;
+
     touch-action: none;
 }
 
 body {
     position: fixed;
     inset: 0;
+
+    font-family:
+        Inter,
+        Arial,
+        Helvetica,
+        sans-serif;
 }
 
-#gameShell {
+#game {
     position: fixed;
     inset: 0;
-    overflow: hidden;
-    background:
-        radial-gradient(
-            circle at 50% 45%,
-            rgba(80, 255, 120, 0.025),
-            transparent 35%
-        ),
-        #050606;
-}
 
-canvas {
-    position: absolute;
-    inset: 0;
     width: 100%;
     height: 100%;
+
+    overflow: hidden;
+}
+
+#canvas {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
     display: block;
+
     cursor: none;
 }
 
+/* =========================================================
+   HUD
+========================================================= */
+
 #hud {
-    position: absolute;
+    position: fixed;
     inset: 0;
+
     pointer-events: none;
+
     z-index: 20;
 }
 
-.hud-left {
+#brand {
     position: absolute;
+
     top: 22px;
     left: 24px;
-}
 
-.logo {
-    font-size: 18px;
+    color: rgba(255,255,255,.94);
+
+    font-size: 17px;
     font-weight: 900;
-    letter-spacing: 0.22em;
-    color: rgba(255, 255, 255, 0.94);
+
+    letter-spacing: .24em;
 }
 
-.status {
+#stats {
+    position: absolute;
+
+    top: 51px;
+    left: 24px;
+
     display: flex;
     gap: 18px;
-    margin-top: 10px;
 }
 
-.status-item {
+.stat {
     display: flex;
     align-items: center;
+
     gap: 7px;
 }
 
-.label {
+.stat span {
+    color: rgba(255,255,255,.32);
+
+    font-size: 8px;
+    font-weight: 800;
+
+    letter-spacing: .13em;
+}
+
+.stat strong {
+    color: rgba(255,255,255,.8);
+
     font-size: 9px;
-    letter-spacing: 0.14em;
-    color: rgba(255, 255, 255, 0.35);
-    font-weight: 700;
-}
-
-.value {
-    font-size: 10px;
     font-weight: 900;
-    letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.8);
+
+    letter-spacing: .08em;
 }
 
-.value.ready {
+.stat strong.ready {
     color: #72f28b;
 }
 
+/* =========================================================
+   CROSSHAIR
+========================================================= */
+
 #crosshair {
     position: fixed;
-    width: 18px;
-    height: 18px;
-    pointer-events: none;
-    z-index: 30;
+
+    width: 17px;
+    height: 17px;
+
     transform: translate(-50%, -50%);
+
+    pointer-events: none;
+
+    z-index: 30;
 }
 
 #crosshair::before,
 #crosshair::after {
     content: "";
+
     position: absolute;
-    background: rgba(255, 255, 255, 0.75);
+
+    background: rgba(255,255,255,.8);
 }
 
 #crosshair::before {
     width: 2px;
-    height: 18px;
-    left: 8px;
+    height: 17px;
+
+    left: 7px;
     top: 0;
 }
 
 #crosshair::after {
-    width: 18px;
+    width: 17px;
     height: 2px;
+
     left: 0;
-    top: 8px;
+    top: 7px;
 }
 
-/* ============================================================
+/* =========================================================
    MOBILE
-   ============================================================ */
+========================================================= */
 
 #mobileControls {
     display: none;
-    position: absolute;
+
+    position: fixed;
     inset: 0;
+
     z-index: 50;
+
     pointer-events: none;
 }
 
-.joystick-zone {
+.joystickPad {
     position: absolute;
-    bottom: 28px;
+
     width: 150px;
     height: 150px;
+
+    bottom: 25px;
+
     border-radius: 50%;
+
     pointer-events: auto;
+
     touch-action: none;
 }
 
-.left-zone {
-    left: 24px;
+#movePad {
+    left: 22px;
 }
 
-.right-zone {
-    right: 24px;
+#aimPad {
+    right: 22px;
 }
 
-.joystick {
+.joystickBase {
     position: absolute;
+
+    width: 108px;
+    height: 108px;
+
     left: 50%;
     top: 50%;
-    width: 112px;
-    height: 112px;
+
     transform: translate(-50%, -50%);
+
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    background: rgba(255, 255, 255, 0.035);
+
+    background:
+        rgba(255,255,255,.035);
+
+    border:
+        1px solid rgba(255,255,255,.12);
+
     box-shadow:
-        inset 0 0 30px rgba(255, 255, 255, 0.025),
-        0 10px 40px rgba(0, 0, 0, 0.3);
+        inset 0 0 30px rgba(255,255,255,.025),
+        0 10px 30px rgba(0,0,0,.3);
+
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
 }
 
-.joystick-knob {
+.joystickKnob {
     position: absolute;
+
+    width: 52px;
+    height: 52px;
+
     left: 50%;
     top: 50%;
-    width: 54px;
-    height: 54px;
+
     transform: translate(-50%, -50%);
+
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow:
-        0 8px 25px rgba(0, 0, 0, 0.35),
-        inset 0 0 15px rgba(255, 255, 255, 0.04);
+
+    background:
+        rgba(255,255,255,.09);
+
+    border:
+        1px solid rgba(255,255,255,.18);
 }
 
-.left-zone .joystick-knob {
-    border-color: rgba(114, 242, 139, 0.35);
+#movePad .joystickKnob {
+    border-color:
+        rgba(114,242,139,.4);
 }
 
-.right-zone .joystick-knob {
-    border-color: rgba(255, 255, 255, 0.25);
-}
-
-.mobile-button {
+.actionButton {
     position: absolute;
-    border: 1px solid rgba(255, 255, 255, 0.14);
+
+    border: 1px solid rgba(255,255,255,.14);
+
     border-radius: 50%;
+
     pointer-events: auto;
+
     touch-action: none;
+
     color: white;
-    font-size: 9px;
+
+    background:
+        rgba(15,17,16,.72);
+
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+
+    font-size: 8px;
     font-weight: 900;
-    letter-spacing: 0.08em;
-    background: rgba(20, 22, 21, 0.72);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+
+    letter-spacing: .1em;
+
     box-shadow:
-        0 10px 35px rgba(0, 0, 0, 0.35),
-        inset 0 0 20px rgba(255, 255, 255, 0.025);
+        0 10px 30px rgba(0,0,0,.35),
+        inset 0 0 20px rgba(255,255,255,.025);
 }
 
-.mobile-button:active {
-    transform: scale(0.92);
+.actionButton:active {
+    transform: scale(.9);
 }
 
-.fire-button {
-    right: 184px;
-    bottom: 50px;
+.fire {
     width: 70px;
     height: 70px;
+
+    right: 177px;
+    bottom: 39px;
 }
 
-.dash-button {
-    right: 110px;
-    bottom: 138px;
+.dash {
     width: 62px;
     height: 62px;
+
+    right: 105px;
+    bottom: 126px;
+
     color: #72f28b;
-    border-color: rgba(114, 242, 139, 0.25);
+
+    border-color:
+        rgba(114,242,139,.28);
 }
 
-@media (pointer: coarse), (max-width: 900px) {
+/* =========================================================
+   PORTRAIT
+========================================================= */
+
+#portraitWarning {
+    display: none;
+
+    position: fixed;
+    inset: 0;
+
+    z-index: 999;
+
+    align-items: center;
+    justify-content: center;
+
+    text-align: center;
+
+    background: #050606;
+
+    color: white;
+}
+
+#portraitWarning div {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+#portraitWarning b {
+    font-size: 20px;
+    letter-spacing: .25em;
+}
+
+#portraitWarning span {
+    color: #72f28b;
+
+    font-size: 11px;
+    font-weight: 900;
+
+    letter-spacing: .18em;
+}
+
+#portraitWarning small {
+    color: rgba(255,255,255,.35);
+
+    font-size: 10px;
+}
+
+/* =========================================================
+   TOUCH DEVICE
+========================================================= */
+
+@media (pointer: coarse) {
     #mobileControls {
         display: block;
     }
@@ -239,99 +366,81 @@ canvas {
     #crosshair {
         display: none;
     }
-
-    .hud-left {
-        top: max(16px, env(safe-area-inset-top));
-        left: 18px;
-    }
-
-    .logo {
-        font-size: 15px;
-    }
-
-    .status {
-        margin-top: 7px;
-        gap: 12px;
-    }
-
-    .label {
-        font-size: 8px;
-    }
-
-    .value {
-        font-size: 9px;
-    }
 }
 
-@media (max-width: 700px) {
-    .joystick-zone {
-        bottom: max(20px, env(safe-area-inset-bottom));
+/* =========================================================
+   SMALL MOBILE
+========================================================= */
+
+@media (pointer: coarse) and (max-width: 700px) {
+
+    #brand {
+        top: max(12px, env(safe-area-inset-top));
+        left: 16px;
+
+        font-size: 14px;
     }
 
-    .left-zone {
-        left: 10px;
+    #stats {
+        top: 38px;
+        left: 16px;
     }
 
-    .right-zone {
-        right: 10px;
-    }
-
-    .fire-button {
-        right: 156px;
-        bottom: 36px;
-    }
-
-    .dash-button {
-        right: 92px;
-        bottom: 118px;
-    }
-}
-
-@media (max-width: 480px) {
-    .joystick-zone {
+    .joystickPad {
         width: 135px;
         height: 135px;
+
+        bottom: max(
+            15px,
+            env(safe-area-inset-bottom)
+        );
     }
 
-    .joystick {
-        width: 102px;
-        height: 102px;
+    .joystickBase {
+        width: 98px;
+        height: 98px;
     }
 
-    .joystick-knob {
-        width: 50px;
-        height: 50px;
+    .joystickKnob {
+        width: 48px;
+        height: 48px;
     }
 
-    .fire-button {
-        right: 138px;
-        bottom: 34px;
-        width: 64px;
-        height: 64px;
+    #movePad {
+        left: 8px;
     }
 
-    .dash-button {
-        right: 78px;
-        bottom: 106px;
+    #aimPad {
+        right: 8px;
+    }
+
+    .fire {
+        width: 63px;
+        height: 63px;
+
+        right: 144px;
+        bottom: 27px;
+    }
+
+    .dash {
         width: 56px;
         height: 56px;
+
+        right: 77px;
+        bottom: 103px;
     }
 }
 
-@media (orientation: portrait) and (max-width: 700px) {
-    #gameShell::after {
-        content: "GIRA TU DISPOSITIVO";
-        position: absolute;
-        inset: 0;
+/* =========================================================
+   PORTRAIT DETECTION
+========================================================= */
+
+@media (orientation: portrait) and (max-width: 900px) {
+    #portraitWarning {
         display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #050606;
-        color: rgba(255, 255, 255, 0.65);
-        font-size: 11px;
-        font-weight: 900;
-        letter-spacing: 0.18em;
-        z-index: 100;
-        pointer-events: none;
+    }
+
+    #mobileControls {
+        display: none;
     }
 }
