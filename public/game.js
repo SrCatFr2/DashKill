@@ -1,33 +1,42 @@
-const canvas = document.getElementById("canvas");
+const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-const dashFill = document.getElementById("dashFill");
-const dashText = document.getElementById("dashText");
-const shotTimer = document.getElementById("shotTimer");
-const shotElements = document.querySelectorAll(".shots i");
+const dashStatus = document.getElementById("dashStatus");
+const shotStatus = document.getElementById("shotStatus");
 const crosshair = document.getElementById("crosshair");
 
-let width = 0;
-let height = 0;
-let dpr = 1;
+const mobileControls = document.getElementById("mobileControls");
+const moveJoystickZone = document.getElementById("moveJoystick");
+const aimJoystickZone = document.getElementById("aimJoystick");
+const moveKnob = moveJoystickZone.querySelector(".joystick-knob");
+const aimKnob = aimJoystickZone.querySelector(".joystick-knob");
+const fireButton = document.getElementById("fireButton");
+const dashButton = document.getElementById("dashButton");
 
-function resize() {
-    dpr = Math.min(window.devicePixelRatio || 1, 2);
+let W = window.innerWidth;
+let H = window.innerHeight;
+let DPR = Math.min(window.devicePixelRatio || 1, 2);
 
-    width = window.innerWidth;
-    height = window.innerHeight;
+function resizeCanvas() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
 
-    canvas.width = width * dpr;
-    canvas.height = height * dpr;
+    canvas.width = Math.floor(W * DPR);
+    canvas.height = Math.floor(H * DPR);
 
-    canvas.style.width = `${width}px`;
-    canvas.style.height = `${height}px`;
+    canvas.style.width = `${W}px`;
+    canvas.style.height = `${H}px`;
 
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 }
 
-window.addEventListener("resize", resize);
-resize();
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+/* ============================================================
+   INPUT
+   ============================================================ */
 
 const keys = new Set();
 
@@ -35,17 +44,13 @@ window.addEventListener("keydown", e => {
     keys.add(e.code);
 
     if (
-        [
-            "KeyW",
-            "KeyA",
-            "KeyS",
-            "KeyD",
-            "ShiftLeft",
-            "ShiftRight",
-            "Space"
-        ].includes(e.code)
+        ["KeyW", "KeyA", "KeyS", "KeyD", "Space"].includes(e.code)
     ) {
         e.preventDefault();
+    }
+
+    if (e.code === "Space") {
+        dash();
     }
 });
 
@@ -54,8 +59,8 @@ window.addEventListener("keyup", e => {
 });
 
 const mouse = {
-    x: width / 2,
-    y: height / 2,
+    x: W / 2,
+    y: H / 2,
     down: false
 };
 
@@ -80,561 +85,1115 @@ window.addEventListener("mouseup", e => {
     }
 });
 
+/* ============================================================
+   MOBILE INPUT
+   ============================================================ */
+
+const mobile = {
+    move: {
+        active: false,
+        id: null,
+        x: 0,
+        y: 0
+    },
+
+    aim: {
+        active: false,
+        id: null,
+        x: 0,
+        y: 0
+    },
+
+    firing: false
+};
+
+function getJoystickVector(
+    event,
+    zone,
+    maxDistance = 48
+) {
+    const rect = zone.getBoundingClientRect();
+
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    let dx = event.clientX - centerX;
+    let dy = event.clientY - centerY;
+
+    const distance = Math.hypot(dx, dy);
+
+    if (distance > maxDistance) {
+        dx = (dx / distance) * maxDistance;
+        dy = (dy / distance) * maxDistance;
+    }
+
+    return {
+        x: dx / maxDistance,
+        y: dy / maxDistance,
+        dx,
+        dy
+    };
+}
+
+function setKnob(knob, dx, dy) {
+    knob.style.transform =
+        `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+}
+
+function resetJoystick(type) {
+    if (type === "move") {
+        mobile.move.active = false;
+        mobile.move.id = null;
+        mobile.move.x = 0;
+        mobile.move.y = 0;
+        setKnob(moveKnob, 0, 0);
+    }
+
+    if (type === "aim") {
+        mobile.aim.active = false;
+        mobile.aim.id = null;
+        mobile.aim.x = 0;
+        mobile.aim.y = 0;
+        setKnob(aimKnob, 0, 0);
+    }
+}
+
+moveJoystickZone.addEventListener("pointerdown", e => {
+    e.preventDefault();
+
+    mobile.move.active = true;
+    mobile.move.id = e.pointerId;
+
+    moveJoystickZone.setPointerCapture(e.pointerId);
+
+    updateMoveJoystick(e);
+});
+
+moveJoystickZone.addEventListener("pointermove", e => {
+    if (
+        mobile.move.active &&
+        mobile.move.id === e.pointerId
+    ) {
+        updateMoveJoystick(e);
+    }
+});
+
+moveJoystickZone.addEventListener("pointerup", e => {
+    if (mobile.move.id === e.pointerId) {
+        resetJoystick("move");
+    }
+});
+
+moveJoystickZone.addEventListener("pointercancel", e => {
+    if (mobile.move.id === e.pointerId) {
+        resetJoystick("move");
+    }
+});
+
+function updateMoveJoystick(e) {
+    const v = getJoystickVector(
+        e,
+        moveJoystickZone,
+        48
+    );
+
+    mobile.move.x = v.x;
+    mobile.move.y = v.y;
+
+    setKnob(
+        moveKnob,
+        v.dx,
+        v.dy
+    );
+}
+
+aimJoystickZone.addEventListener("pointerdown", e => {
+    e.preventDefault();
+
+    mobile.aim.active = true;
+    mobile.aim.id = e.pointerId;
+
+    aimJoystickZone.setPointerCapture(e.pointerId);
+
+    updateAimJoystick(e);
+});
+
+aimJoystickZone.addEventListener("pointermove", e => {
+    if (
+        mobile.aim.active &&
+        mobile.aim.id === e.pointerId
+    ) {
+        updateAimJoystick(e);
+    }
+});
+
+aimJoystickZone.addEventListener("pointerup", e => {
+    if (mobile.aim.id === e.pointerId) {
+        resetJoystick("aim");
+    }
+});
+
+aimJoystickZone.addEventListener("pointercancel", e => {
+    if (mobile.aim.id === e.pointerId) {
+        resetJoystick("aim");
+    }
+});
+
+function updateAimJoystick(e) {
+    const v = getJoystickVector(
+        e,
+        aimJoystickZone,
+        48
+    );
+
+    mobile.aim.x = v.x;
+    mobile.aim.y = v.y;
+
+    setKnob(
+        aimKnob,
+        v.dx,
+        v.dy
+    );
+}
+
+/* FIRE */
+
+fireButton.addEventListener("pointerdown", e => {
+    e.preventDefault();
+
+    mobile.firing = true;
+
+    shoot();
+});
+
+fireButton.addEventListener("pointerup", e => {
+    e.preventDefault();
+    mobile.firing = false;
+});
+
+fireButton.addEventListener("pointercancel", () => {
+    mobile.firing = false;
+});
+
+fireButton.addEventListener("pointerleave", () => {
+    mobile.firing = false;
+});
+
+/* DASH */
+
+dashButton.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    dash();
+});
+
+/* ============================================================
+   PLAYER
+   ============================================================ */
+
 const player = {
     x: 0,
     y: 0,
 
-    radius: 14,
+    radius: 16,
 
     speed: 520,
+    acceleration: 4200,
+    friction: 3600,
 
     vx: 0,
     vy: 0,
 
     angle: 0,
 
+    dashReady: true,
     dashPower: 1150,
     dashDuration: 0.105,
-    dashTime: 0,
 
-    dashReady: true,
-
-    touchingWall: false,
-    facingWall: false,
+    dashTimer: 0,
 
     wallContactTime: 0,
-    wallCooldown: 0,
+    wallRechargeConsumed: false,
 
+    lastWallNormal: {
+        x: 0,
+        y: 0
+    }
+};
+
+/* ============================================================
+   BULLETS
+   ============================================================ */
+
+const bullets = [];
+
+const weapon = {
     maxShots: 2,
     shots: 2,
 
-    shotCooldown: 0,
+    rechargeTime: 5,
+    rechargeTimer: 0,
 
-    hp: 100
+    bulletSpeed: 1050,
+    bulletRadius: 5,
+
+    maxBounces: 5
 };
 
-let bullets = [];
+/* ============================================================
+   MAP
+   ============================================================ */
 
 const walls = [];
 
-function createMap() {
-
+function buildMap() {
     walls.length = 0;
 
-    const margin = Math.min(width, height) * 0.12;
+    const margin = 80;
 
-    walls.push(
-        {
-            x: width / 2 - 160,
-            y: height / 2 - 14,
-            w: 320,
-            h: 28
-        },
+    walls.push({
+        x: margin,
+        y: margin,
+        w: W - margin * 2,
+        h: 18
+    });
 
-        {
-            x: width / 2 - 14,
-            y: height / 2 - 150,
-            w: 28,
-            h: 90
-        },
+    walls.push({
+        x: margin,
+        y: H - margin - 18,
+        w: W - margin * 2,
+        h: 18
+    });
 
-        {
-            x: width / 2 - 14,
-            y: height / 2 + 60,
-            w: 28,
-            h: 90
-        },
+    walls.push({
+        x: margin,
+        y: margin,
+        w: 18,
+        h: H - margin * 2
+    });
 
-        {
-            x: margin,
-            y: margin + 70,
-            w: 180,
-            h: 24
-        },
+    walls.push({
+        x: W - margin - 18,
+        y: margin,
+        w: 18,
+        h: H - margin * 2
+    });
 
-        {
-            x: width - margin - 180,
-            y: margin + 70,
-            w: 180,
-            h: 24
-        },
+    /*
+       OBSTÁCULOS CENTRALES
+    */
 
-        {
-            x: margin,
-            y: height - margin - 94,
-            w: 180,
-            h: 24
-        },
+    const centerX = W / 2;
+    const centerY = H / 2;
 
-        {
-            x: width - margin - 180,
-            y: height - margin - 94,
-            w: 180,
-            h: 24
-        }
-    );
+    walls.push({
+        x: centerX - 150,
+        y: centerY - 9,
+        w: 300,
+        h: 18
+    });
+
+    walls.push({
+        x: centerX - 9,
+        y: centerY - 120,
+        w: 18,
+        h: 80
+    });
+
+    walls.push({
+        x: centerX - 9,
+        y: centerY + 40,
+        w: 18,
+        h: 80
+    });
 }
 
-createMap();
+buildMap();
 
-window.addEventListener("resize", createMap);
+window.addEventListener("resize", () => {
+    buildMap();
+
+    player.x = Math.min(
+        Math.max(player.x, 110),
+        W - 110
+    );
+
+    player.y = Math.min(
+        Math.max(player.y, 110),
+        H - 110
+    );
+});
+
+/* ============================================================
+   START
+   ============================================================ */
+
+player.x = W * 0.25;
+player.y = H * 0.5;
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
 
 function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
 }
 
-function circleRectCollision(cx, cy, radius, rect) {
+function normalize(x, y) {
+    const length = Math.hypot(x, y);
 
-    const closestX = clamp(cx, rect.x, rect.x + rect.w);
-    const closestY = clamp(cy, rect.y, rect.y + rect.h);
+    if (length === 0) {
+        return {
+            x: 0,
+            y: 0
+        };
+    }
+
+    return {
+        x: x / length,
+        y: y / length
+    };
+}
+
+function circleRectCollision(
+    cx,
+    cy,
+    radius,
+    rect
+) {
+    const closestX = clamp(
+        cx,
+        rect.x,
+        rect.x + rect.w
+    );
+
+    const closestY = clamp(
+        cy,
+        rect.y,
+        rect.y + rect.h
+    );
 
     const dx = cx - closestX;
     const dy = cy - closestY;
 
-    return dx * dx + dy * dy < radius * radius;
+    return (
+        dx * dx +
+        dy * dy <
+        radius * radius
+    );
 }
 
-function moveWithCollision(entity, dx, dy) {
+/* ============================================================
+   AIM
+   ============================================================ */
 
-    let hitX = false;
-    let hitY = false;
-
-    entity.x += dx;
-
-    for (const wall of walls) {
-
-        if (circleRectCollision(entity.x, entity.y, entity.radius, wall)) {
-
-            hitX = true;
-
-            if (dx > 0) {
-                entity.x = wall.x - entity.radius;
-            } else if (dx < 0) {
-                entity.x = wall.x + wall.w + entity.radius;
-            }
+function updateAim() {
+    if (mobile.aim.active) {
+        if (
+            Math.abs(mobile.aim.x) > 0.08 ||
+            Math.abs(mobile.aim.y) > 0.08
+        ) {
+            player.angle = Math.atan2(
+                mobile.aim.y,
+                mobile.aim.x
+            );
         }
+
+        return;
     }
 
-    entity.y += dy;
+    const dx = mouse.x - player.x;
+    const dy = mouse.y - player.y;
 
-    for (const wall of walls) {
-
-        if (circleRectCollision(entity.x, entity.y, entity.radius, wall)) {
-
-            hitY = true;
-
-            if (dy > 0) {
-                entity.y = wall.y - entity.radius;
-            } else if (dy < 0) {
-                entity.y = wall.y + wall.h + entity.radius;
-            }
-        }
-    }
-
-    entity.x = clamp(entity.x, entity.radius, width - entity.radius);
-    entity.y = clamp(entity.y, entity.radius, height - entity.radius);
-
-    return {
-        hitX,
-        hitY
-    };
+    player.angle = Math.atan2(dy, dx);
 }
 
-function getMovement() {
+/* ============================================================
+   MOVEMENT INPUT
+   ============================================================ */
 
+function getMovementInput() {
     let x = 0;
     let y = 0;
 
-    if (keys.has("KeyW")) y--;
-    if (keys.has("KeyS")) y++;
-    if (keys.has("KeyA")) x--;
-    if (keys.has("KeyD")) x++;
+    if (keys.has("KeyW")) y -= 1;
+    if (keys.has("KeyS")) y += 1;
+    if (keys.has("KeyA")) x -= 1;
+    if (keys.has("KeyD")) x += 1;
 
-    const length = Math.hypot(x, y);
-
-    if (length > 0) {
-        x /= length;
-        y /= length;
+    if (
+        mobile.move.active &&
+        (
+            Math.abs(mobile.move.x) > 0.05 ||
+            Math.abs(mobile.move.y) > 0.05
+        )
+    ) {
+        x = mobile.move.x;
+        y = mobile.move.y;
     }
 
-    return { x, y };
+    return normalize(x, y);
 }
 
-function startDash() {
+/* ============================================================
+   SHOOT
+   ============================================================ */
 
-    if (!player.dashReady) return;
-    if (player.dashTime > 0) return;
+function shoot() {
+    if (weapon.shots <= 0) {
+        return;
+    }
 
-    const movement = getMovement();
+    const dirX = Math.cos(player.angle);
+    const dirY = Math.sin(player.angle);
 
-    let dx = movement.x;
-    let dy = movement.y;
+    const spawnDistance = player.radius + 9;
 
-    if (dx === 0 && dy === 0) {
+    bullets.push({
+        x: player.x + dirX * spawnDistance,
+        y: player.y + dirY * spawnDistance,
 
+        vx: dirX * weapon.bulletSpeed,
+        vy: dirY * weapon.bulletSpeed,
+
+        radius: weapon.bulletRadius,
+
+        bounces: 0,
+
+        life: 8,
+
+        trail: []
+    });
+
+    weapon.shots--;
+
+    if (weapon.shots === 0) {
+        weapon.rechargeTimer = weapon.rechargeTime;
+    }
+}
+
+/* ============================================================
+   DASH
+   ============================================================ */
+
+function dash() {
+    if (!player.dashReady) {
+        return;
+    }
+
+    let dx = 0;
+    let dy = 0;
+
+    const movement = getMovementInput();
+
+    if (
+        Math.abs(movement.x) > 0.05 ||
+        Math.abs(movement.y) > 0.05
+    ) {
+        dx = movement.x;
+        dy = movement.y;
+    } else {
         dx = Math.cos(player.angle);
         dy = Math.sin(player.angle);
     }
 
-    player.vx = dx * player.dashPower;
-    player.vy = dy * player.dashPower;
+    const direction = normalize(dx, dy);
 
-    player.dashTime = player.dashDuration;
+    player.vx = direction.x * player.dashPower;
+    player.vy = direction.y * player.dashPower;
+
+    player.dashTimer = player.dashDuration;
 
     player.dashReady = false;
 
+    /*
+       El jugador debe abandonar la pared
+       antes de volver a cargar el dash.
+    */
+
+    player.wallRechargeConsumed = true;
     player.wallContactTime = 0;
 }
 
-let previousShift = false;
+/* ============================================================
+   WALL CONTACT
+   ============================================================ */
 
-function updateDashInput() {
-
-    const shift =
-        keys.has("ShiftLeft") ||
-        keys.has("ShiftRight");
-
-    if (shift && !previousShift) {
-        startDash();
-    }
-
-    previousShift = shift;
-}
-
-function checkWallContact(dt) {
-
-    let touching = false;
-    let normalX = 0;
-    let normalY = 0;
+function getWallContact() {
+    let best = null;
 
     for (const wall of walls) {
-
-        const closestX = clamp(
-            player.x,
-            wall.x,
-            wall.x + wall.w
-        );
-
-        const closestY = clamp(
-            player.y,
-            wall.y,
-            wall.y + wall.h
-        );
-
-        const dx = player.x - closestX;
-        const dy = player.y - closestY;
-
-        const distance = Math.hypot(dx, dy);
-
-        if (distance <= player.radius + 1.5) {
-
-            touching = true;
-
-            if (Math.abs(dx) > Math.abs(dy)) {
-                normalX = Math.sign(dx) || 1;
-                normalY = 0;
-            } else {
-                normalX = 0;
-                normalY = Math.sign(dy) || 1;
-            }
-
-            break;
+        if (
+            !circleRectCollision(
+                player.x,
+                player.y,
+                player.radius + 1,
+                wall
+            )
+        ) {
+            continue;
         }
+
+        const left =
+            Math.abs(
+                player.x -
+                wall.x
+            );
+
+        const right =
+            Math.abs(
+                player.x -
+                (wall.x + wall.w)
+            );
+
+        const top =
+            Math.abs(
+                player.y -
+                wall.y
+            );
+
+        const bottom =
+            Math.abs(
+                player.y -
+                (wall.y + wall.h)
+            );
+
+        const min = Math.min(
+            left,
+            right,
+            top,
+            bottom
+        );
+
+        if (min === left) {
+            best = {
+                x: -1,
+                y: 0
+            };
+        } else if (min === right) {
+            best = {
+                x: 1,
+                y: 0
+            };
+        } else if (min === top) {
+            best = {
+                x: 0,
+                y: -1
+            };
+        } else {
+            best = {
+                x: 0,
+                y: 1
+            };
+        }
+
+        break;
     }
 
-    player.touchingWall = touching;
+    return best;
+}
 
-    if (!touching) {
+function updateWallRecharge(dt) {
+    const normal = getWallContact();
 
+    if (!normal) {
         player.wallContactTime = 0;
-        player.facingWall = false;
+
+        /*
+           Ya abandonó la pared.
+           Puede volver a cargar el dash.
+        */
+
+        player.wallRechargeConsumed = false;
 
         return;
     }
+
+    player.lastWallNormal = normal;
+
+    /*
+       El jugador debe estar mirando hacia la pared.
+       Si la pared está a la izquierda,
+       player.angle debe apuntar a la izquierda.
+    */
 
     const facingX = Math.cos(player.angle);
     const facingY = Math.sin(player.angle);
 
     const dot =
-        facingX * -normalX +
-        facingY * -normalY;
+        facingX * normal.x +
+        facingY * normal.y;
 
-    player.facingWall = dot > 0.65;
-
-    if (player.facingWall && player.dashTime <= 0) {
-
+    if (dot > 0.65) {
         player.wallContactTime += dt;
+
+        /*
+           0.1 segundos mirando hacia la pared.
+        */
 
         if (
             player.wallContactTime >= 0.1 &&
-            !player.dashReady
+            !player.wallRechargeConsumed
         ) {
-
             player.dashReady = true;
-            player.wallContactTime = 0;
+            player.wallRechargeConsumed = true;
         }
-
     } else {
-
         player.wallContactTime = 0;
     }
 }
 
-function updatePlayer(dt) {
+/* ============================================================
+   PLAYER COLLISION
+   ============================================================ */
 
-    player.angle = Math.atan2(
-        mouse.y - player.y,
-        mouse.x - player.x
-    );
+function movePlayer(dt) {
+    const input = getMovementInput();
 
-    updateDashInput();
+    let targetVX = input.x * player.speed;
+    let targetVY = input.y * player.speed;
 
-    if (player.dashTime > 0) {
+    if (player.dashTimer <= 0) {
+        const blend =
+            1 -
+            Math.exp(
+                -player.acceleration * dt / player.speed
+            );
 
-        player.dashTime -= dt;
+        player.vx +=
+            (targetVX - player.vx) * blend;
 
-        moveWithCollision(
-            player,
-            player.vx * dt,
-            player.vy * dt
-        );
+        player.vy +=
+            (targetVY - player.vy) * blend;
 
-    } else {
+        if (
+            Math.abs(input.x) < 0.01 &&
+            Math.abs(input.y) < 0.01
+        ) {
+            const friction =
+                player.friction * dt;
 
-        const movement = getMovement();
+            const velocity =
+                Math.hypot(
+                    player.vx,
+                    player.vy
+                );
 
-        const targetVX = movement.x * player.speed;
-        const targetVY = movement.y * player.speed;
+            if (velocity > 0) {
+                const next =
+                    Math.max(
+                        0,
+                        velocity - friction
+                    );
 
-        /*
-         * Movimiento deliberadamente responsivo.
-         * No hay aceleración pesada.
-         */
-        const response = 0.88;
+                const ratio =
+                    next / velocity;
 
-        player.vx += (targetVX - player.vx) * response;
-        player.vy += (targetVY - player.vy) * response;
-
-        moveWithCollision(
-            player,
-            player.vx * dt,
-            player.vy * dt
-        );
-    }
-
-    checkWallContact(dt);
-
-    if (player.shots < player.maxShots) {
-
-        player.shotCooldown -= dt;
-
-        if (player.shotCooldown <= 0) {
-
-            player.shots = player.maxShots;
-            player.shotCooldown = 0;
+                player.vx *= ratio;
+                player.vy *= ratio;
+            }
         }
     }
 
-    updateHUD();
-}
+    const nextX =
+        player.x + player.vx * dt;
 
-function shoot() {
+    const nextY =
+        player.y + player.vy * dt;
 
-    if (player.shots <= 0) return;
+    /*
+       X collision
+    */
 
-    player.shots--;
+    let blockedX = false;
 
-    if (player.shots === 0) {
-        player.shotCooldown = 5;
+    for (const wall of walls) {
+        if (
+            circleRectCollision(
+                nextX,
+                player.y,
+                player.radius,
+                wall
+            )
+        ) {
+            blockedX = true;
+            break;
+        }
     }
 
-    const angle = player.angle;
+    if (!blockedX) {
+        player.x = nextX;
+    } else {
+        player.vx *= -0.12;
+    }
 
-    const speed = 1050;
+    /*
+       Y collision
+    */
 
-    bullets.push({
-        x: player.x + Math.cos(angle) * 22,
-        y: player.y + Math.sin(angle) * 22,
+    let blockedY = false;
 
-        vx: Math.cos(angle) * speed,
-        vy: Math.sin(angle) * speed,
+    for (const wall of walls) {
+        if (
+            circleRectCollision(
+                player.x,
+                nextY,
+                player.radius,
+                wall
+            )
+        ) {
+            blockedY = true;
+            break;
+        }
+    }
 
-        radius: 5,
+    if (!blockedY) {
+        player.y = nextY;
+    } else {
+        player.vy *= -0.12;
+    }
 
-        bounces: 0,
-        maxBounces: 5,
+    /*
+       Límites
+    */
 
-        life: 8
-    });
+    player.x = clamp(
+        player.x,
+        player.radius + 18,
+        W - player.radius - 18
+    );
 
-    updateHUD();
+    player.y = clamp(
+        player.y,
+        player.radius + 18,
+        H - player.radius - 18
+    );
+}
+
+/* ============================================================
+   BULLETS
+   ============================================================ */
+
+function reflectBullet(
+    bullet,
+    normalX,
+    normalY
+) {
+    const dot =
+        bullet.vx * normalX +
+        bullet.vy * normalY;
+
+    bullet.vx -=
+        2 * dot * normalX;
+
+    bullet.vy -=
+        2 * dot * normalY;
 }
 
 function updateBullets(dt) {
-
     for (let i = bullets.length - 1; i >= 0; i--) {
-
         const bullet = bullets[i];
-
-        const oldX = bullet.x;
-        const oldY = bullet.y;
-
-        bullet.x += bullet.vx * dt;
-        bullet.y += bullet.vy * dt;
 
         bullet.life -= dt;
 
-        let bounced = false;
-
-        for (const wall of walls) {
-
-            if (
-                circleRectCollision(
-                    bullet.x,
-                    bullet.y,
-                    bullet.radius,
-                    wall
-                )
-            ) {
-
-                const wasHorizontal =
-                    oldY >= wall.y &&
-                    oldY <= wall.y + wall.h;
-
-                const wasVertical =
-                    oldX >= wall.x &&
-                    oldX <= wall.x + wall.w;
-
-                if (wasHorizontal) {
-                    bullet.vx *= -1;
-                } else if (wasVertical) {
-                    bullet.vy *= -1;
-                } else {
-                    bullet.vx *= -1;
-                    bullet.vy *= -1;
-                }
-
-                bullet.bounces++;
-
-                bullet.x = oldX;
-                bullet.y = oldY;
-
-                bounced = true;
-
-                if (bullet.bounces >= bullet.maxBounces) {
-                    bullet.life = 0;
-                }
-
-                break;
-            }
-        }
-
-        if (
-            bullet.x < -50 ||
-            bullet.x > width + 50 ||
-            bullet.y < -50 ||
-            bullet.y > height + 50
-        ) {
-            bullet.life = 0;
-        }
-
         if (bullet.life <= 0) {
             bullets.splice(i, 1);
+            continue;
+        }
+
+        bullet.trail.push({
+            x: bullet.x,
+            y: bullet.y
+        });
+
+        if (bullet.trail.length > 7) {
+            bullet.trail.shift();
+        }
+
+        let remaining = dt;
+
+        /*
+           Permite varias colisiones
+           durante un mismo frame.
+        */
+
+        let collisionCount = 0;
+
+        while (
+            remaining > 0 &&
+            collisionCount < 3
+        ) {
+            const oldX = bullet.x;
+            const oldY = bullet.y;
+
+            const nextX =
+                bullet.x +
+                bullet.vx * remaining;
+
+            const nextY =
+                bullet.y +
+                bullet.vy * remaining;
+
+            let collision = null;
+
+            for (const wall of walls) {
+                if (
+                    circleRectCollision(
+                        nextX,
+                        nextY,
+                        bullet.radius,
+                        wall
+                    )
+                ) {
+                    collision = wall;
+                    break;
+                }
+            }
+
+            if (!collision) {
+                bullet.x = nextX;
+                bullet.y = nextY;
+                remaining = 0;
+                break;
+            }
+
+            /*
+               Encontrar la dirección de la colisión.
+            */
+
+            const closestX = clamp(
+                nextX,
+                collision.x,
+                collision.x + collision.w
+            );
+
+            const closestY = clamp(
+                nextY,
+                collision.y,
+                collision.y + collision.h
+            );
+
+            let nx =
+                nextX - closestX;
+
+            let ny =
+                nextY - closestY;
+
+            const length =
+                Math.hypot(nx, ny);
+
+            if (length > 0.0001) {
+                nx /= length;
+                ny /= length;
+            } else {
+                /*
+                   Caso esquina.
+                */
+
+                const dx =
+                    nextX -
+                    (collision.x + collision.w / 2);
+
+                const dy =
+                    nextY -
+                    (collision.y + collision.h / 2);
+
+                if (
+                    Math.abs(dx) >
+                    Math.abs(dy)
+                ) {
+                    nx = Math.sign(dx);
+                    ny = 0;
+                } else {
+                    nx = 0;
+                    ny = Math.sign(dy);
+                }
+            }
+
+            bullet.x = oldX;
+            bullet.y = oldY;
+
+            reflectBullet(
+                bullet,
+                nx,
+                ny
+            );
+
+            bullet.bounces++;
+
+            if (
+                bullet.bounces >
+                weapon.maxBounces
+            ) {
+                bullets.splice(i, 1);
+                break;
+            }
+
+            /*
+               Separar la bala de la pared.
+            */
+
+            bullet.x += nx * 2;
+            bullet.y += ny * 2;
+
+            remaining *= 0.35;
+
+            collisionCount++;
         }
     }
 }
 
-function updateHUD() {
+/* ============================================================
+   RELOAD
+   ============================================================ */
 
-    if (player.dashReady) {
+function updateWeapon(dt) {
+    if (weapon.shots < weapon.maxShots) {
+        weapon.rechargeTimer -= dt;
 
-        dashFill.style.transform = "scaleX(1)";
-        dashText.textContent = "READY";
-
-    } else if (player.wallContactTime > 0) {
-
-        const progress =
-            clamp(player.wallContactTime / 0.1, 0, 1);
-
-        dashFill.style.transform =
-            `scaleX(${progress})`;
-
-        dashText.textContent =
-            `${Math.round(progress * 100)}%`;
-
-    } else {
-
-        dashFill.style.transform = "scaleX(0)";
-        dashText.textContent = "EMPTY";
-    }
-
-    shotElements.forEach((element, index) => {
-
-        element.classList.toggle(
-            "empty",
-            index >= player.shots
-        );
-    });
-
-    if (player.shots === 2) {
-
-        shotTimer.textContent = "READY";
-
-    } else {
-
-        shotTimer.textContent =
-            `${Math.max(0, player.shotCooldown).toFixed(1)}s`;
+        if (weapon.rechargeTimer <= 0) {
+            weapon.shots = weapon.maxShots;
+            weapon.rechargeTimer = 0;
+        }
     }
 }
 
+/* ============================================================
+   AUTO FIRE MÓVIL
+   ============================================================ */
+
+let mobileFireTimer = 0;
+
+function updateMobileFire(dt) {
+    if (!mobile.firing) {
+        mobileFireTimer = 0;
+        return;
+    }
+
+    mobileFireTimer -= dt;
+
+    if (mobileFireTimer <= 0) {
+        shoot();
+
+        /*
+           Evita convertir el arma en una
+           ametralladora. Mantiene la regla
+           de máximo 2 disparos disponibles.
+        */
+
+        mobileFireTimer = 0.15;
+    }
+}
+
+/* ============================================================
+   UPDATE
+   ============================================================ */
+
+function update(dt) {
+    updateAim();
+
+    if (player.dashTimer > 0) {
+        player.dashTimer -= dt;
+    }
+
+    movePlayer(dt);
+    updateWallRecharge(dt);
+
+    updateWeapon(dt);
+    updateMobileFire(dt);
+    updateBullets(dt);
+
+    updateHUD();
+}
+
+/* ============================================================
+   HUD
+   ============================================================ */
+
+function updateHUD() {
+    shotStatus.textContent =
+        `${weapon.shots} / ${weapon.maxShots}`;
+
+    if (player.dashReady) {
+        dashStatus.textContent = "READY";
+        dashStatus.classList.add("ready");
+    } else {
+        dashStatus.textContent = "EMPTY";
+        dashStatus.classList.remove("ready");
+    }
+}
+
+/* ============================================================
+   DRAW
+   ============================================================ */
+
 function drawBackground() {
-
-    ctx.fillStyle = "#070807";
-    ctx.fillRect(0, 0, width, height);
+    ctx.fillStyle = "#050606";
+    ctx.fillRect(0, 0, W, H);
 
     /*
-     * Grid
-     */
-    const grid = 50;
+       Grid
+    */
 
-    ctx.strokeStyle = "rgba(255,255,255,.035)";
-    ctx.lineWidth = 1;
+    const grid = 42;
 
-    for (let x = 0; x < width; x += grid) {
+    ctx.beginPath();
 
-        ctx.beginPath();
+    for (
+        let x = 0;
+        x <= W;
+        x += grid
+    ) {
         ctx.moveTo(x, 0);
-        ctx.lineTo(x, height);
-        ctx.stroke();
+        ctx.lineTo(x, H);
     }
 
-    for (let y = 0; y < height; y += grid) {
-
-        ctx.beginPath();
+    for (
+        let y = 0;
+        y <= H;
+        y += grid
+    ) {
         ctx.moveTo(0, y);
-        ctx.lineTo(width, y);
-        ctx.stroke();
+        ctx.lineTo(W, y);
     }
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,0.018)";
+
+    ctx.lineWidth = 1;
+    ctx.stroke();
 
     /*
-     * Arena border
-     */
-    ctx.strokeStyle = "rgba(255,255,255,.12)";
-    ctx.lineWidth = 2;
+       Centro de arena
+    */
 
-    ctx.strokeRect(
-        24,
-        24,
-        width - 48,
-        height - 48
+    const gradient =
+        ctx.createRadialGradient(
+            W / 2,
+            H / 2,
+            20,
+            W / 2,
+            H / 2,
+            Math.max(W, H) * 0.6
+        );
+
+    gradient.addColorStop(
+        0,
+        "rgba(80,255,120,0.025)"
     );
+
+    gradient.addColorStop(
+        1,
+        "rgba(0,0,0,0)"
+    );
+
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, W, H);
 }
 
 function drawWalls() {
-
     for (const wall of walls) {
-
-        ctx.fillStyle = "#161816";
+        ctx.fillStyle =
+            "rgba(255,255,255,0.045)";
 
         ctx.fillRect(
             wall.x,
@@ -643,7 +1202,9 @@ function drawWalls() {
             wall.h
         );
 
-        ctx.strokeStyle = "rgba(255,255,255,.15)";
+        ctx.strokeStyle =
+            "rgba(255,255,255,0.09)";
+
         ctx.lineWidth = 1;
 
         ctx.strokeRect(
@@ -652,54 +1213,49 @@ function drawWalls() {
             wall.w,
             wall.h
         );
-
-        /*
-         * Interior highlight
-         */
-        ctx.strokeStyle = "rgba(255,255,255,.035)";
-
-        ctx.strokeRect(
-            wall.x + 3,
-            wall.y + 3,
-            wall.w - 6,
-            wall.h - 6
-        );
     }
 }
 
 function drawBullets() {
-
     for (const bullet of bullets) {
 
-        const angle =
-            Math.atan2(bullet.vy, bullet.vx);
+        /*
+           Trail
+        */
 
-        const trailLength = 22;
+        for (
+            let i = 0;
+            i < bullet.trail.length;
+            i++
+        ) {
+            const point =
+                bullet.trail[i];
 
-        ctx.save();
+            const alpha =
+                i /
+                bullet.trail.length *
+                0.18;
 
-        ctx.strokeStyle =
-            "rgba(143,255,105,.35)";
+            ctx.beginPath();
 
-        ctx.lineWidth = 3;
+            ctx.arc(
+                point.x,
+                point.y,
+                bullet.radius *
+                    (0.35 + i / bullet.trail.length),
+                0,
+                Math.PI * 2
+            );
 
-        ctx.beginPath();
+            ctx.fillStyle =
+                `rgba(114,242,139,${alpha})`;
 
-        ctx.moveTo(
-            bullet.x -
-                Math.cos(angle) * trailLength,
-            bullet.y -
-                Math.sin(angle) * trailLength
-        );
+            ctx.fill();
+        }
 
-        ctx.lineTo(
-            bullet.x,
-            bullet.y
-        );
-
-        ctx.stroke();
-
-        ctx.fillStyle = "#a1ff82";
+        /*
+           Bala
+        */
 
         ctx.beginPath();
 
@@ -711,130 +1267,192 @@ function drawBullets() {
             Math.PI * 2
         );
 
+        ctx.fillStyle = "#72f28b";
         ctx.fill();
-
-        ctx.restore();
-    }
-}
-
-function drawPlayer() {
-
-    ctx.save();
-
-    ctx.translate(player.x, player.y);
-
-    /*
-     * Dash shadow
-     */
-    if (player.dashTime > 0) {
-
-        ctx.globalAlpha = 0.25;
-
-        ctx.fillStyle = "#8fff69";
 
         ctx.beginPath();
 
         ctx.arc(
-            -player.vx * 0.015,
-            -player.vy * 0.015,
-            player.radius + 5,
+            bullet.x,
+            bullet.y,
+            bullet.radius * 2.1,
             0,
             Math.PI * 2
         );
 
+        ctx.fillStyle =
+            "rgba(114,242,139,0.08)";
+
         ctx.fill();
-
-        ctx.globalAlpha = 1;
     }
+}
 
+function drawPlayer() {
     /*
-     * Body
-     */
-    ctx.fillStyle = "#ededeb";
+       Aura
+    */
+
+    const glow =
+        ctx.createRadialGradient(
+            player.x,
+            player.y,
+            0,
+            player.x,
+            player.y,
+            42
+        );
+
+    glow.addColorStop(
+        0,
+        "rgba(114,242,139,0.13)"
+    );
+
+    glow.addColorStop(
+        1,
+        "rgba(114,242,139,0)"
+    );
+
+    ctx.fillStyle = glow;
 
     ctx.beginPath();
 
     ctx.arc(
+        player.x,
+        player.y,
+        42,
         0,
-        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    /*
+       Dirección
+    */
+
+    const dirX =
+        Math.cos(player.angle);
+
+    const dirY =
+        Math.sin(player.angle);
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        player.x,
+        player.y
+    );
+
+    ctx.lineTo(
+        player.x +
+        dirX * 25,
+        player.y +
+        dirY * 25
+    );
+
+    ctx.strokeStyle =
+        "rgba(114,242,139,0.3)";
+
+    ctx.lineWidth = 3;
+
+    ctx.stroke();
+
+    /*
+       Player
+    */
+
+    ctx.beginPath();
+
+    ctx.arc(
+        player.x,
+        player.y,
         player.radius,
         0,
         Math.PI * 2
     );
 
+    ctx.fillStyle =
+        "#72f28b";
+
     ctx.fill();
 
-    /*
-     * Aim direction
-     */
-    ctx.rotate(player.angle);
+    ctx.strokeStyle =
+        "rgba(255,255,255,0.75)";
 
-    ctx.fillStyle = "#8fff69";
+    ctx.lineWidth = 2;
 
-    ctx.fillRect(
-        8,
-        -3,
-        15,
-        6
-    );
+    ctx.stroke();
 
     /*
-     * Center
-     */
-    ctx.fillStyle = "#111";
+       Centro
+    */
 
     ctx.beginPath();
 
     ctx.arc(
-        0,
-        0,
+        player.x,
+        player.y,
         4,
         0,
         Math.PI * 2
     );
 
-    ctx.fill();
+    ctx.fillStyle =
+        "#050606";
 
-    ctx.restore();
+    ctx.fill();
+}
+
+function drawDashIndicator() {
+    if (!player.dashReady) {
+        return;
+    }
+
+    ctx.beginPath();
+
+    ctx.arc(
+        player.x,
+        player.y,
+        player.radius + 7,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.strokeStyle =
+        "rgba(114,242,139,0.25)";
+
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
 }
 
 function draw() {
-
     drawBackground();
     drawWalls();
     drawBullets();
+    drawDashIndicator();
     drawPlayer();
 }
+
+/* ============================================================
+   GAME LOOP
+   ============================================================ */
 
 let lastTime = performance.now();
 
 function loop(now) {
-
-    let dt = (now - lastTime) / 1000;
+    const rawDt =
+        (now - lastTime) / 1000;
 
     lastTime = now;
 
-    /*
-     * Evita saltos enormes después de cambiar
-     * de pestaña o perder algunos frames.
-     */
-    dt = Math.min(dt, 0.033);
+    const dt =
+        Math.min(rawDt, 0.033);
 
-    updatePlayer(dt);
-    updateBullets(dt);
-
+    update(dt);
     draw();
 
     requestAnimationFrame(loop);
 }
-
-player.x = width / 2;
-player.y = height / 2 + 250;
-
-mouse.x = width / 2;
-mouse.y = height / 2;
-
-crosshair.style.left = `${mouse.x}px`;
-crosshair.style.top = `${mouse.y}px`;
 
 requestAnimationFrame(loop);
