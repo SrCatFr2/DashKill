@@ -1,52 +1,14 @@
 import { CONFIG } from "./config.js";
-
-import {
-    player,
-    createPlayer
-} from "./player.js";
-
-import {
-    setupKeyboard,
-    setupMouse,
-    keyboard,
-    mouse
-} from "./input.js";
-
-import {
-    mobile
-} from "./mobile.js";
-
-import {
-    updateMovement
-} from "./movement.js";
-
-import {
-    updateWeapon
-} from "./shooting.js";
-
-import {
-    updateBullets
-} from "./bullets.js";
-
-import {
-    buildMap,
-    walls
-} from "./map.js";
-
-import {
-    updateCamera,
-    camera
-} from "./camera.js";
-
-import {
-    effects,
-    updateEffects,
-    drawEffects
-} from "./effects.js";
-
-import {
-    updateHUD
-} from "./hud.js";
+import { player, createPlayer } from "./player.js";
+import { setupKeyboard, setupMouse, mouse, keyboard } from "./input.js";
+import { setupMobile, mobile } from "./mobile.js";
+import { updateMovement } from "./movement.js";
+import { updateWeapon } from "./shooting.js";
+import { bullets, updateBullets } from "./bullets.js";
+import { buildMap, walls } from "./map.js";
+import { updateCamera, camera } from "./camera.js";
+import { updateEffects, drawEffects } from "./effects.js";
+import { updateHUD } from "./hud.js";
 
 const canvas =
     document.getElementById(
