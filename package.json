@@ -1,7 +1,8 @@
 {
   "name": "dashkill",
-  "version": "1.0.0",
-  "private": true,
+  "version": "3.0.0",
+  "description": "DashKill - Fast top-down 1v1 shooter",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
