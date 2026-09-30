@@ -12,6 +12,8 @@
         viewport-fit=cover"
     >
 
+    <meta name="theme-color" content="#050606">
+
     <title>DashKill</title>
 
     <link rel="stylesheet" href="/style.css">
@@ -22,6 +24,11 @@
 <div id="game">
 
     <canvas id="canvas"></canvas>
+
+
+    <!-- ==============================
+         HUD
+    =============================== -->
 
     <div id="hud">
 
@@ -45,9 +52,21 @@
 
     </div>
 
+
+    <!-- ==============================
+         CROSSHAIR
+    =============================== -->
+
     <div id="crosshair"></div>
 
+
+    <!-- ==============================
+         MOBILE CONTROLS
+    =============================== -->
+
     <div id="mobileControls">
+
+        <!-- MOVIMIENTO -->
 
         <div
             id="movePad"
@@ -58,6 +77,9 @@
             </div>
         </div>
 
+
+        <!-- AIM -->
+
         <div
             id="aimPad"
             class="joystickPad"
@@ -67,33 +89,64 @@
             </div>
         </div>
 
+
+        <!-- FIRE -->
+
         <button
             id="fireButton"
             class="actionButton fire"
+            type="button"
         >
             FIRE
         </button>
 
+
+        <!-- DASH -->
+
         <button
             id="dashButton"
             class="actionButton dash"
+            type="button"
         >
             DASH
         </button>
 
     </div>
 
+
+    <!-- ==============================
+         PORTRAIT WARNING
+    =============================== -->
+
     <div id="portraitWarning">
-        <div>
+
+        <div class="portraitBox">
+
             <b>DASHKILL</b>
-            <span>GIRA TU DISPOSITIVO</span>
-            <small>El juego requiere orientación horizontal.</small>
+
+            <span>
+                GIRA TU DISPOSITIVO
+            </span>
+
+            <small>
+                El juego requiere orientación horizontal.
+            </small>
+
         </div>
+
     </div>
 
 </div>
 
-<script type="module" src="/js/main.js"></script>
+
+<!-- ==============================
+     GAME
+=============================== -->
+
+<script
+    type="module"
+    src="/js/main.js?v=3"
+></script>
 
 </body>
 </html>
